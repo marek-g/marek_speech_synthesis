@@ -1,8 +1,10 @@
 # Marek TTS Server
 
-HTTP server giving access to all supported TTS engines with a unified API.
+TCP server giving access to all supported TTS engines with a unified API.
 
-The server is written in Python. The most interesting TTS engines available at the time of writing it are written in Python. Writting the server also in Pyhon is the quickest way to integrate them. As the API is made in the form of HTTP server it gives an easy access from any programming language. It can also be hosted remotely.
+The server is written in Python. The most interesting TTS engines available at the time of writing it are written in Python. Writting the server also in Pyhon is the quickest way to integrate them. It gives an easy access from any programming language. It can also be hosted remotely.
+
+The reason why it's a TCP server (and not REST/HTTP) is that the stateful protocol is needed to properly manage resources. When we start the server no resources are allocated. Keeping the service unused in the background is cheap. The model is loaded once the client is connected and kept in the memory as long as at least one client is connected. Once all clients are disconnected the model is removed from the memory.
 
 ## Supported TTS Engines
 
@@ -27,3 +29,60 @@ Run the script to setup python environment with TTS engines (about 6.2GB) and mo
 ``` shell
 ./setup.sh
 ```
+
+## The protocol
+
+### JSON Request & JSON Response format
+
+- message length: 4 bytes, LE
+- UTF-8 json bytes
+
+### Enumerate voices
+
+Gives a list of all available voices.
+
+- JSON Request:
+
+``` json
+{
+	methodName: "enumerateVoices",
+}
+```
+
+- JSON Response:
+
+``` json
+[
+	{
+		voiceId: "John en/pl (XTTS2)",
+		voiceName: "John",
+		engineName: "XTTS2",
+		languages: ["en", "pl"],
+	}
+]
+```
+
+### TTS Stream
+
+- JSON Request:
+
+``` json
+{
+	methodName: "ttsStream",
+	text: "Text to speak",
+	voiceId: "John en/pl (XTTS2)",
+	language: "pl",
+}
+```
+
+- JSON Response:
+
+``` json
+{
+	resultCode: 0,
+	description: "OK",
+	sample_rate: 24000,
+}
+```
+
+- Followed by chunks. Each chunk is: [number_of_samples: 4 bytes, LE] [samples: array of 16-bit LE signed ints]. After the last chunk there is sent number_of_samples: 0.
