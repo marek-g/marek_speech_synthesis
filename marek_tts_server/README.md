@@ -34,8 +34,7 @@ Run the script to setup python environment with TTS engines (about 6.2GB) and mo
 
 ### JSON Request & JSON Response format
 
-- message length: 4 bytes, LE
-- UTF-8 json bytes
+- UTF-8 json bytes formatted in one line followed by a single '\n' byte
 
 ### Enumerate voices
 
@@ -44,22 +43,13 @@ Gives a list of all available voices.
 - JSON Request:
 
 ``` json
-{
-	methodName: "enumerateVoices",
-}
+{ "method": "enumerateVoices" }
 ```
 
 - JSON Response:
 
 ``` json
-[
-	{
-		voiceId: "John en/pl (XTTS2)",
-		voiceName: "John",
-		engineName: "XTTS2",
-		languages: ["en", "pl"],
-	}
-]
+[ { "voice": "Claribel Dervla", "engine": "XTTS2", "languages": ["en", "pl"] } ]
 ```
 
 ### TTS Stream
@@ -67,22 +57,15 @@ Gives a list of all available voices.
 - JSON Request:
 
 ``` json
-{
-	methodName: "ttsStream",
-	text: "Text to speak",
-	voiceId: "John en/pl (XTTS2)",
-	language: "pl",
-}
+{ "method": "ttsStream", "text": "Text to speak", "voice": "Claribel Dervla", "engine": "XTTS2", "language": "pl" }
 ```
 
 - JSON Response:
 
 ``` json
-{
-	resultCode: 0,
-	description: "OK",
-	sample_rate: 24000,
-}
+{ "resultCode": 0, "description": "OK", sample_rate: 24000 }
 ```
 
 - Followed by chunks. Each chunk is: [number_of_samples: 4 bytes, LE] [samples: array of 16-bit LE signed ints]. After the last chunk there is sent number_of_samples: 0.
+
+- After each chunk waits for one line response. If the response is "y\n" - the next chunk will be sent. If the response is something else, the method is stopped (no more data will be sent).
