@@ -1,13 +1,5 @@
 import os
-os.environ['LPK_DISABLE_AE_LAZY_LOAD'] = '1' # do not initialize torch on import
-#os.environ['CUDA_VISIBLE_DEVICES'] = '0'  # Specify the GPU device index to use
-
-import torch
-from TTS.tts.configs.xtts_config import XttsConfig
-from TTS.tts.models.xtts import Xtts
 from typing import List
-import numpy as np
-import scipy
 import threading
 import gc
 import os
@@ -32,6 +24,10 @@ class XTTS2Speech:
                 self.stop()
 
     def start(self):
+        import torch
+        from TTS.tts.configs.xtts_config import XttsConfig
+        from TTS.tts.models.xtts import Xtts
+
         # Get device
         device = "cuda" if torch.cuda.is_available() else "cpu"
         # Init TTS
@@ -44,6 +40,8 @@ class XTTS2Speech:
         self.tts_model.to(device)
 
     def stop(self):
+        import torch
+
         del self.tts_model
         gc.collect()
         if torch.cuda.is_available():
@@ -66,6 +64,10 @@ class XTTS2Speech:
         return self.speaker_data[voice]
 
     def convert_audio_to_list_of_ints(self, wav: List[float]):
+        import torch
+        import numpy as np
+        import scipy
+
         # if tensor convert to numpy
         if torch.is_tensor(wav):
             wav = wav.cpu().numpy()
