@@ -7,6 +7,9 @@ source .venv/bin/activate
 # install COQUI AI TTS
 pip install coqui-tts
 
+# install other dependencies
+pip install toml
+
 # create symlink to local models folder
 mkdir .models
 rm -f ~/.local/share/tts

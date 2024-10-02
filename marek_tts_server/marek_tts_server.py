@@ -2,6 +2,7 @@ import json
 import socket
 import socketserver
 import sys
+import toml
 import traceback
 
 from engines.xtts2_speech import XTTS2Speech
@@ -88,7 +89,11 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    config = toml.load("config.toml")
+
+    HOST, PORT = config["server"]["host"], config["server"]["port"]
+
+    print("Starting TTS server at {}:{}".format(HOST, PORT))
 
     # Create the server, binding to localhost on port 9999
     with ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler) as server:
