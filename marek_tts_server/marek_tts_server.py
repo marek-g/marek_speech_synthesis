@@ -65,25 +65,22 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             return
 
         chunks = speech.say(text, voice, language)
-        self.request.sendall((json.dumps({
-            "resultCode": 0, "description": "OK", "sample_rate": 24000}) + "\n").encode())
 
-        zero_sent = False
         break_received = False
         for chunk in chunks:
-            self.request.send(len(chunk).to_bytes(4, 'little'))
             if len(chunk) == 0:
-                zero_sent = True
                 break
             else:
+                self.request.sendall((json.dumps({
+                    "resultCode": 0, "sample_rate": 24000, "chunk_size": len(chunk)}) + "\n").encode())
                 self.request.sendall(chunk)
                 response = stream_reader.readline().strip()
                 if response != "y":
-                    break_reveived = True
+                    break_received = True
                     break
-        if not break_received and not zero_sent:
-            zero = 0
-            self.request.send(zero.to_bytes(4, 'little'))
+        if not break_received:
+            self.request.sendall((json.dumps({
+                "resultCode": 0, "sample_rate": 24000, "chunk_size": 0}) + "\n").encode())
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass

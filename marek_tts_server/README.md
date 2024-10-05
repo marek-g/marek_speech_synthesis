@@ -60,12 +60,18 @@ Gives a list of all available voices.
 { "method": "ttsStream", "text": "Text to speak", "voice": "Claribel Dervla", "engine": "XTTS2", "language": "pl" }
 ```
 
-- JSON Response:
+- JSON Response on error:
 
 ``` json
-{ "resultCode": 0, "description": "OK", sample_rate: 24000 }
+{ "resultCode": -1, "description": "what went wrong" }
 ```
 
-- Followed by chunks. Each chunk is: [number_of_samples: 4 bytes, LE] [samples: array of 16-bit LE signed ints]. After the last chunk there is sent number_of_samples: 0.
+- JSON Response on success:
 
-- After each chunk waits for one line response. If the response is "y\n" - the next chunk will be sent. If the response is something else, the method is stopped (no more data will be sent).
+``` json
+{ "resultCode": 0, sample_rate: 24000, chunk_size: 12000 }
+```
+
+Followed by chunk data of `chunk_size` size in bytes. Each chunk is [samples: array of 16-bit LE signed ints]. When `chunk_size` is 0 there is no more data.
+
+After each non-empty chunk the server waits for one line of response. If the response is "y\n" - the next chunk will be sent (starting with another JSON response). If the the client sends something else, the method is stopped (no more data will be sent).
