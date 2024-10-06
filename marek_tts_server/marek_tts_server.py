@@ -20,9 +20,11 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def setup(self):
         super().setup()
+        print("Connected: {}".format(self.client_address))
         speech.add_reference()
 
     def finish(self):
+        print("Disconnected: {}".format(self.client_address))
         speech.release_reference()
         super().finish()
 

@@ -24,6 +24,8 @@ class XTTS2Speech:
                 self.stop()
 
     def start(self):
+        print("XTTS2 engine: starting...");
+        
         import torch
         from TTS.tts.configs.xtts_config import XttsConfig
         from TTS.tts.models.xtts import Xtts
@@ -39,15 +41,22 @@ class XTTS2Speech:
                                    use_deepspeed=True if device == "cuda" else False)
         self.tts_model.to(device)
 
+        print("XTTS2 engine: started");
+
     def stop(self):
+        print("XTTS2 engine... stopping");
+        
         import torch
 
         del self.tts_model
         gc.collect()
         if torch.cuda.is_available():
-            torch.cuda.empty_cache()        
+            torch.cuda.empty_cache()
+
+        print("XTTS2 engine: stopped");
                     
     def enumerate_voices(self):
+        print("XTTS2 engine: enumerate voices");
         return [{ "voice": voice,
                     "engine": "XTTS2",
                     "languages": ["en", "es", "fr", "de",
@@ -58,6 +67,7 @@ class XTTS2Speech:
                   for voice in self.tts_model.speaker_manager.speaker_names]
 
     def say(self, text, voice, language):
+        print("XTTS2 engine: say");
         (gpt_cond_latent, speaker_embedding) = self.get_speaker_data(voice)
         chunks = self.tts_model.inference_stream(text, language, gpt_cond_latent, speaker_embedding, enable_text_splitting=True)
         for chunk in chunks:
