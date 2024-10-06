@@ -48,7 +48,14 @@ class XTTS2Speech:
             torch.cuda.empty_cache()        
                     
     def enumerate_voices(self):
-        return self.tts_model.speaker_manager.speaker_names
+        return [{ "voice": voice,
+                    "engine": "XTTS2",
+                    "languages": ["en", "es", "fr", "de",
+                                  "it", "pt", "pl", "tr",
+                                  "ru", "nl", "cs", "ar",
+                                  "zh-cn", "ja", "hu",
+                                  "ko", "hi"] }
+                  for voice in self.tts_model.speaker_manager.speaker_names]
 
     def say(self, text, voice, language):
         (gpt_cond_latent, speaker_embedding) = self.get_speaker_data(voice)

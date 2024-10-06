@@ -49,15 +49,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 traceback.print_exc(file=sys.stderr)
 
     def enumerate_voices(self):
-        voices = speech.enumerate_voices()
-        result = [{ "voice": voice,
-                    "engine": "XTTS2",
-                    "languages": ["en", "es", "fr", "de",
-                                  "it", "pt", "pl", "tr",
-                                  "ru", "nl", "cs", "ar",
-                                  "zh-cn", "ja", "hu",
-                                  "ko", "hi"] }
-                  for voice in voices]
+        result = speech.enumerate_voices()
         self.request.sendall((json.dumps(result) + "\n").encode())
 
     def tts_stream(self, stream_reader, text, voice, engine, language):
