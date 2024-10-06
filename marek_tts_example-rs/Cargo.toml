@@ -1,0 +1,9 @@
+[package]
+name = "marek_tts_example-rs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+marek_tts_client-rs = { version = "0.1", path = "../marek_tts_client-rs" }
+tokio = { version = "1", features = ["full"] }
