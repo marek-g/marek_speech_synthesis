@@ -7,5 +7,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut tts_client = TtsClient::connect("127.0.0.1:9999").await?;
 
+    println!("Enumerating voices...");
+
+    let voices = tts_client.enumerate_voices().await?;
+    println!("{:?}", voices);
+
     Ok(())
 }
