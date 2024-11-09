@@ -30,6 +30,14 @@ Run the script to setup python environment with TTS engines (about 6.2GB) and mo
 ./setup.sh
 ```
 
+## Starting the server
+
+### Linux
+
+``` shell
+./start.sh
+```
+
 ## The protocol
 
 ### JSON Request & JSON Response format
