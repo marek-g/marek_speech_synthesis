@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export CUDA_HOME=/opt/cuda
+
 # create virtual environment for Python
 python -m venv .venv
 source .venv/bin/activate
