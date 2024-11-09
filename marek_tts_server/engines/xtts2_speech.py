@@ -37,8 +37,12 @@ class XTTS2Speech:
         model_path = ".models/tts_models--multilingual--multi-dataset--xtts_v2"
         config.load_json(os.path.join(model_path, "config.json"))
         self.tts_model = Xtts.init_from_config(config)
+        #TODO: deepspeed compiler should improve speed on nvidia by 2x-3x
+        #but I've got compilation errors with deepspeed in runtime
+        #use_deepspeed = True if device == "cuda" else False
+        use_deepspeed = False
         self.tts_model.load_checkpoint(config, checkpoint_dir=model_path, eval=True,
-                                   use_deepspeed=True if device == "cuda" else False)
+                                       use_deepspeed=use_deepspeed)
         self.tts_model.to(device)
 
         print("XTTS2 engine: started");

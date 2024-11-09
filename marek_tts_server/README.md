@@ -30,6 +30,8 @@ Run the script to setup python environment with TTS engines (about 6.2GB) and mo
 ./setup.sh
 ```
 
+For using deepspeech feature which speed up TTS generation on NVidia by 2x-3x you need to install `cuda` on your system and set `$CUDA_HOME` environment variable, but it didn't work for me.
+
 ## Starting the server
 
 ### Linux

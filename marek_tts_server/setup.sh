@@ -9,6 +9,7 @@ pip install coqui-tts
 
 # install other dependencies
 pip install toml
+#pip install deepspeed
 
 # create symlink to local models folder
 mkdir .models
