@@ -53,7 +53,7 @@ Gives a list of all available voices.
 - JSON Request:
 
 ``` json
-{ "method": "enumerateVoices" }
+{ "method": "enumerate_voices" }
 ```
 
 - JSON Response:
@@ -65,23 +65,24 @@ Gives a list of all available voices.
 ### TTS Stream
 
 - JSON Request:
-
+XG
 ``` json
-{ "method": "ttsStream", "text": "Text to speak", "voice": "Claribel Dervla", "engine": "XTTS2", "language": "pl" }
+{ "method": "tts_stream", "text": "Text to speak", "voice": "Claribel Dervla", "engine": "XTTS2", "language": "pl" }
 ```
 
 - JSON Response on error:
 
 ``` json
-{ "resultCode": -1, "description": "what went wrong" }
+{ "result_code": -1, "description": "what went wrong" }
 ```
 
 - JSON Response on success:
 
 ``` json
-{ "resultCode": 0, sample_rate: 24000, chunk_size: 12000 }
+{ "result_code": 0, "sample_rate": 24000, "chunk_size": 12000, "data": "0100ffff..." }
 ```
 
-Followed by chunk data of `chunk_size` size in bytes. Each chunk is [samples: array of 16-bit LE signed ints]. When `chunk_size` is 0 there is no more data.
+`chunk_size` size in bytes, when `chunk_size` is 0 there is no more data
+`data` - hex encoded array of 16-bit LE signed ints
 
-After each non-empty chunk the server waits for one line of response. If the response is "y\n" - the next chunk will be sent (starting with another JSON response). If the the client sends something else, the method is stopped (no more data will be sent).
+After each non-zero chunk response the server waits for one line of response. If the response is "y\n" - the next chunk will be sent. If the the client sends something else, the method is stopped (no more data will be sent).

@@ -38,16 +38,16 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 command = json.loads(line)
 
-                if command["method"] == "enumerateVoices":
+                if command["method"] == "enumerate_voices":
                     self.enumerate_voices()
 
-                if command["method"] == "ttsStream":
+                if command["method"] == "tts_stream":
                     self.tts_stream(stream_reader, command["text"], command["voice"], command["engine"], command["language"])
 
             except Exception as e:
 
                 self.request.sendall((json.dumps({
-                            "resultCode": -1, "description": str(e)}) + "\n").encode())
+                            "result_code": -1, "description": str(e)}) + "\n").encode())
                 traceback.print_exc(file=sys.stderr)
 
     def enumerate_voices(self):
@@ -65,16 +65,18 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             if len(chunk) == 0:
                 break
             else:
+                print("Sending chunk of size:", len(chunk) * 2);
+                hex_data = "".join(v.item().to_bytes(2, 'little', signed = True).hex() for v in chunk);
                 self.request.sendall((json.dumps({
-                    "resultCode": 0, "sample_rate": 24000, "chunk_size": len(chunk)}) + "\n").encode())
-                self.request.sendall(chunk)
+                    "result_code": 0, "sample_rate": 24000, "chunk_size": len(chunk) * 2, "data": hex_data}) + "\n").encode())
                 response = stream_reader.readline().strip()
-                if response != "y":
+                if response != b"y":
                     break_received = True
                     break
+
         if not break_received:
             self.request.sendall((json.dumps({
-                "resultCode": 0, "sample_rate": 24000, "chunk_size": 0}) + "\n").encode())
+                "result_code": 0, "sample_rate": 24000, "chunk_size": 0}) + "\n").encode())
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
