@@ -7,8 +7,6 @@ import traceback
 
 from engines.xtts2_speech import XTTS2Speech
 
-speech = XTTS2Speech()
-
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     """
     The request handler class for our server.
@@ -82,9 +80,15 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 if __name__ == "__main__":
+    global speech
+
     config = toml.load("config.toml")
 
     HOST, PORT = config["server"]["host"], config["server"]["port"]
+    USE_CUDA = config["hardware"]["use_cuda"]
+    USE_DEEPSPEED = config["hardware"]["use_deepspeed"]
+
+    speech = XTTS2Speech(USE_CUDA, USE_DEEPSPEED)
 
     print("Starting TTS server at {}:{}".format(HOST, PORT))
 

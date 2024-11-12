@@ -5,10 +5,12 @@ import gc
 import os
 
 class XTTS2Speech:
-    def __init__(self) -> None:
+    def __init__(self, use_cuda, use_deepspeed) -> None:
         self.lock = threading.Lock()
         self.speaker_data = {}
         self.ref_count = 0
+        self.use_cuda = use_cuda
+        self.use_deepspeed = use_deepspeed
 
     def add_reference(self):
         with self.lock:
@@ -31,21 +33,22 @@ class XTTS2Speech:
         from TTS.tts.models.xtts import Xtts
 
         # Get device
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cuda" if self.use_cuda and torch.cuda.is_available() else "cpu"
+        #TODO: deepspeed compiler should improve speed on nvidia by 2x-3x
+        #but I've got compilation errors with deepspeed in runtime
+        use_deepspeed = True if device == "cuda" and self.use_deepspeed else False
+        print("Device: {}, deepspeed: {}".format(device, use_deepspeed))
+
         # Init TTS
         config = XttsConfig()
         model_path = ".models/tts_models--multilingual--multi-dataset--xtts_v2"
         config.load_json(os.path.join(model_path, "config.json"))
         self.tts_model = Xtts.init_from_config(config)
-        #TODO: deepspeed compiler should improve speed on nvidia by 2x-3x
-        #but I've got compilation errors with deepspeed in runtime
-        #use_deepspeed = True if device == "cuda" else False
-        use_deepspeed = False
         self.tts_model.load_checkpoint(config, checkpoint_dir=model_path, eval=True,
                                        use_deepspeed=use_deepspeed)
         self.tts_model.to(device)
 
-        print("XTTS2 engine: started");
+        print("XTTS2 engine: ready");
 
     def stop(self):
         print("XTTS2 engine... stopping");

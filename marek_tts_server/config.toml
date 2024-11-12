@@ -1,3 +1,7 @@
 [server]
 host = "localhost"
 port = 9999
+
+[hardware]
+use_cuda = true
+use_deepspeed = false
