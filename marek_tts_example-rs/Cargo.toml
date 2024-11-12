@@ -9,3 +9,4 @@ marek_tts_client-rs = { version = "0.1", path = "../marek_tts_client-rs" }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 futures-util = "0.3"
+cpal = "0.15"

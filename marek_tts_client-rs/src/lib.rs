@@ -16,10 +16,10 @@ pub struct TtsClient {
 
 #[derive(Debug, Deserialize)]
 pub struct Voice {
-    voice: String,
-    engine: String,
-    languages: Vec<String>,
-    sample_rate: u32,
+    pub voice: String,
+    pub engine: String,
+    pub languages: Vec<String>,
+    pub sample_rate: u32,
 }
 
 #[derive(Debug, Deserialize)]
