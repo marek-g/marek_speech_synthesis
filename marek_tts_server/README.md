@@ -46,6 +46,12 @@ For using deepspeech feature which speed up TTS generation on NVidia by 2x-3x yo
 
 - UTF-8 json bytes formatted in one line followed by a single '\n' byte
 
+- JSON Response on error:
+
+``` json
+{ "error_code": -1, "error_description": "what went wrong" }
+```
+
 ### Enumerate voices
 
 Gives a list of all available voices.
@@ -70,16 +76,10 @@ XG
 { "method": "tts_stream", "text": "Text to speak", "voice": "Claribel Dervla", "engine": "XTTS2", "language": "pl" }
 ```
 
-- JSON Response on error:
-
-``` json
-{ "result_code": -1, "description": "what went wrong" }
-```
-
 - JSON Response on success:
 
 ``` json
-{ "result_code": 0, "sample_rate": 24000, "chunk_size": 12000, "data": "0100ffff..." }
+{ "sample_rate": 24000, "chunk_size": 12000, "data": "0100ffff..." }
 ```
 
 `chunk_size` size in bytes, when `chunk_size` is 0 there is no more data

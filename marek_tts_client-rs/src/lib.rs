@@ -5,7 +5,7 @@ use byteorder::{ByteOrder, LittleEndian};
 use futures_core::stream::Stream;
 use hex::FromHex;
 use serde::{Deserialize, Serialize};
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpStream, ToSocketAddrs};
 
@@ -21,6 +21,12 @@ pub struct Voice {
     languages: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ErrorResponse {
+    error_code: i32,
+    error_description: String,
+}
+
 #[derive(Serialize)]
 struct TtsStreamRequest<'a> {
     method: &'a str,
@@ -32,10 +38,8 @@ struct TtsStreamRequest<'a> {
 
 #[derive(Debug, Deserialize)]
 struct TtsStreamResponse {
-    result_code: i32,
-    description: Option<String>,
-    sample_rate: Option<u32>,
-    chunk_size: Option<usize>,
+    sample_rate: u32,
+    chunk_size: usize,
     data: Option<String>,
 }
 
@@ -56,7 +60,12 @@ impl TtsClient {
 
         let mut line = String::new();
         self.reader.read_line(&mut line).await?;
-        Ok(serde_json::from_str(&line)?)
+
+        if let Ok(error_response) = serde_json::from_str::<ErrorResponse>(&line) {
+            Err(error_response.error_description.into())
+        } else {
+            Ok(serde_json::from_str(&line)?)
+        }
     }
 
     pub fn tts_stream(
@@ -84,20 +93,16 @@ impl TtsClient {
                 loop {
             let mut line = String::new();
             self.reader.read_line(&mut line).await?;
+
+            if let Ok(error_response) = serde_json::from_str::<ErrorResponse>(&line) {
+                        let err: Box<dyn Error + 'static> = error_response.error_description.into();
+                        Err(err)?;
+            }
+
             let response: TtsStreamResponse = serde_json::from_str(&line)?;
-            //println!("{:?}", response);
-            if response.result_code != 0 {
-                let err: Box<dyn Error + 'static> = response.description.unwrap().into();
-                Err(err)?;
-            }
-
-        let chunk_size = response.chunk_size.unwrap();
-            if chunk_size == 0 {
-                return;
-            }
-
-            let data = response.data.unwrap();
-            let buffer_u8 = <Vec<u8>>::from_hex(data).unwrap();
+            let chunk_size = response.chunk_size;
+            if let Some(data) = response.data {
+                let buffer_u8 = <Vec<u8>>::from_hex(data).unwrap();
             let mut buffer_i16 = vec![0; buffer_u8.len() / 2];
             LittleEndian::read_i16_into(&buffer_u8, &mut buffer_i16);
 
@@ -106,6 +111,9 @@ impl TtsClient {
             self.writer
                 .write_all(b"y\n").await?;
             self.writer.flush().await?;
+            } else {
+            return;
+        }
                 }
             }
     }

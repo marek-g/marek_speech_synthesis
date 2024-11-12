@@ -47,7 +47,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             except Exception as e:
 
                 self.request.sendall((json.dumps({
-                            "result_code": -1, "description": str(e)}) + "\n").encode())
+                            "error_code": -1, "error_description": str(e)}) + "\n").encode())
                 traceback.print_exc(file=sys.stderr)
 
     def enumerate_voices(self):
@@ -68,7 +68,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 print("Sending chunk of size:", len(chunk) * 2);
                 hex_data = "".join(v.item().to_bytes(2, 'little', signed = True).hex() for v in chunk);
                 self.request.sendall((json.dumps({
-                    "result_code": 0, "sample_rate": 24000, "chunk_size": len(chunk) * 2, "data": hex_data}) + "\n").encode())
+                    "sample_rate": 24000, "chunk_size": len(chunk) * 2, "data": hex_data}) + "\n").encode())
                 response = stream_reader.readline().strip()
                 if response != b"y":
                     break_received = True
@@ -76,7 +76,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         if not break_received:
             self.request.sendall((json.dumps({
-                "result_code": 0, "sample_rate": 24000, "chunk_size": 0}) + "\n").encode())
+                "sample_rate": 24000, "chunk_size": 0}) + "\n").encode())
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
