@@ -67,7 +67,8 @@ class XTTS2Speech:
                                   "it", "pt", "pl", "tr",
                                   "ru", "nl", "cs", "ar",
                                   "zh-cn", "ja", "hu",
-                                  "ko", "hi"] }
+                                  "ko", "hi"],
+                    "sample_rate": 24000 }
                   for voice in self.tts_model.speaker_manager.speaker_names]
 
     def say(self, text, voice, language):

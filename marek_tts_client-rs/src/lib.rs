@@ -19,6 +19,7 @@ pub struct Voice {
     voice: String,
     engine: String,
     languages: Vec<String>,
+    sample_rate: u32,
 }
 
 #[derive(Debug, Deserialize)]

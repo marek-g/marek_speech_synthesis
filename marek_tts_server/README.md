@@ -65,7 +65,7 @@ Gives a list of all available voices.
 - JSON Response:
 
 ``` json
-[ { "voice": "Claribel Dervla", "engine": "XTTS2", "languages": ["en", "pl"] } ]
+[ { "voice": "Claribel Dervla", "engine": "XTTS2", "languages": ["en", "pl"], "sample_rate": 24000 } ]
 ```
 
 ### TTS Stream
