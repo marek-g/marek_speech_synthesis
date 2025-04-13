@@ -24,13 +24,47 @@ Supported models:
 
 ### Linux
 
-Run the script to setup python environment with TTS engines (about 6.2GB) and models (about 1.7GB). Tested with Python 3.12.5.
+#### Install pyenv
+
+The needed libraries do not always work with the latest Python version. You need to make sure you are running supported Python version. The `pyenv` package can be used to choose between multiple Python versions to be used on the same system.
+
+After `pyenv` is installed, you need to configure it to work with your shell. See docs at: [PyEnv](https://github.com/pyenv/pyenv).
+
+Next, install needed Python version:
+
+``` shell
+pyenv install 3.12.9
+```
+
+Go to the `marek_tts_server` folder and set local Python version for the project:
+
+``` shell
+pyenv local 3.12.9
+```
+
+From now, everytime you go that folder the correct Python version will be used.
+
+#### Create virtual environment and download required libraries
+
+Run the script to setup python environment with TTS engines (about 6.2GB) and models (about 1.7GB).
 
 ``` shell
 ./setup.sh
 ```
 
 For using deepspeech feature which speed up TTS generation on NVidia by 2x-3x you need to install `cuda` on your system and set `$CUDA_HOME` environment variable, but it didn't work for me.
+
+For troubleshooting the list of working library versions was saved to a file with a command:
+
+``` shell
+pip freeze > pip_requirements.txt
+```
+
+That file can be used to install exactly these versions:
+
+``` shell
+pip install -r pip_requirements.txt
+```
 
 ## Starting the server
 
