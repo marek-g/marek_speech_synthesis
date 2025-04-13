@@ -51,13 +51,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let error_callback =
         |err: StreamError| eprintln!("an error occurred on the output audio stream: {}", err);
     let mut data_callback = Some(move |data: &mut [i16], _info: &cpal::OutputCallbackInfo| {
-        println!("New audio buffer: {}", data.len());
+        println!("New audio buffer: {} {:?}", data.len(), _info);
         std::io::stdout().flush().unwrap();
         for sample in data.iter_mut() {
             if let Ok(s) = rx.try_recv() {
                 *sample = s;
             } else {
                 *sample = 0i16;
+
+                // TODO: if "Has no more data!" then signal end of the playback
+                // in _info.playback - info.callback (+ position in data * samples_per_sec?)
+                //println!("No new data!");
             }
         }
     });
@@ -88,7 +92,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    println!("Has no more data!");
+
+    // TODO: wait for the signal from data_callback
     std::thread::sleep(std::time::Duration::from_millis(3000));
+
+    drop(stream);
+    println!("Dropped stream!");
 
     Ok(())
 }
