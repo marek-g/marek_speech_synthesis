@@ -70,14 +70,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 if no_more_data_clone.load(Ordering::Relaxed) {
                     if let Some(finished_tx) = finished_tx.take() {
-                        let duration = info
+                        let mut presentation_duration = info
                             .timestamp()
                             .playback
                             .duration_since(&info.timestamp().callback)
-                            .unwrap()
+                            .unwrap();
+
+                        // from my experiments the latency on Alsa is about 23 ms
+                        // less than reported (cpal 0.15)
+                        presentation_duration =
+                            presentation_duration.saturating_sub(Duration::from_millis(23));
+
+                        let presentation_duration = presentation_duration
                             + Duration::from_secs_f64((idx as f64) / (sample_rate as f64));
-                        println!("Duration: {:?}", duration);
-                        finished_tx.send(duration).unwrap();
+                        println!("Presentation duration: {:?}", presentation_duration);
+                        finished_tx.send(presentation_duration).unwrap();
                     }
                 }
             }
