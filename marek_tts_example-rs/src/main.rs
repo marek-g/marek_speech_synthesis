@@ -2,11 +2,16 @@ use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     SampleFormat, Stream, StreamError,
 };
-use futures::stream::TryStreamExt;
+use futures::{channel::oneshot, stream::TryStreamExt};
 use futures_util::pin_mut;
 use marek_tts_client_rs::TtsClient;
-use std::io::Write;
-use std::{error::Error, sync::mpsc::channel};
+use std::{
+    error::Error,
+    sync::{mpsc::channel, Arc},
+    time::Duration,
+};
+use std::{io::Write, sync::atomic::AtomicBool, sync::atomic::Ordering};
+use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -46,22 +51,35 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_sample_rate(cpal::SampleRate(sample_rate))
         .config();
 
-    let (tx, rx) = channel();
+    let (sample_tx, sample_rx) = channel();
+    let (finished_tx, finished_rx) = oneshot::channel();
+    let mut finished_tx = Some(finished_tx);
+    let no_more_data = Arc::new(AtomicBool::new(false));
+    let no_more_data_clone = no_more_data.clone();
 
     let error_callback =
         |err: StreamError| eprintln!("an error occurred on the output audio stream: {}", err);
-    let mut data_callback = Some(move |data: &mut [i16], _info: &cpal::OutputCallbackInfo| {
-        println!("New audio buffer: {} {:?}", data.len(), _info);
+    let mut data_callback = Some(move |data: &mut [i16], info: &cpal::OutputCallbackInfo| {
+        println!("New audio buffer: {} {:?}", data.len(), info);
         std::io::stdout().flush().unwrap();
-        for sample in data.iter_mut() {
-            if let Ok(s) = rx.try_recv() {
+        for (idx, sample) in data.iter_mut().enumerate() {
+            if let Ok(s) = sample_rx.try_recv() {
                 *sample = s;
             } else {
                 *sample = 0i16;
 
-                // TODO: if "Has no more data!" then signal end of the playback
-                // in _info.playback - info.callback (+ position in data * samples_per_sec?)
-                //println!("No new data!");
+                if no_more_data_clone.load(Ordering::Relaxed) {
+                    if let Some(finished_tx) = finished_tx.take() {
+                        let duration = info
+                            .timestamp()
+                            .playback
+                            .duration_since(&info.timestamp().callback)
+                            .unwrap()
+                            + Duration::from_secs_f64((idx as f64) / (sample_rate as f64));
+                        println!("Duration: {:?}", duration);
+                        finished_tx.send(duration).unwrap();
+                    }
+                }
             }
         }
     });
@@ -81,7 +99,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         for sample in chunk.iter() {
             //println!("Send data!");
             std::io::stdout().flush().unwrap();
-            tx.send(*sample)?;
+            sample_tx.send(*sample)?;
         }
 
         if let Some(data_callback) = data_callback.take() {
@@ -93,9 +111,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     println!("Has no more data!");
+    no_more_data.store(true, Ordering::Relaxed);
 
-    // TODO: wait for the signal from data_callback
-    std::thread::sleep(std::time::Duration::from_millis(3000));
+    // wait for the signal from data_callback
+    let playback_duration = finished_rx.await.unwrap();
+    sleep(playback_duration).await;
 
     drop(stream);
     println!("Dropped stream!");
