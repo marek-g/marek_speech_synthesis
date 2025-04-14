@@ -4,7 +4,7 @@ use cpal::{
 };
 use futures::{channel::oneshot, stream::TryStreamExt};
 use futures_util::pin_mut;
-use marek_tts_client_rs::TtsClient;
+use marek_tts_client::TtsClient;
 use std::{
     error::Error,
     sync::{mpsc::channel, Arc},

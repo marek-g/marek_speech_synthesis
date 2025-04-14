@@ -1,5 +1,5 @@
 [package]
-name = "marek_tts_client-rs"
+name = "marek_tts_client"
 version = "0.1.0"
 authors = ["Marek Gibek <marek-dev@yandex.com>"]
 description = "Rust client for Marek TTS Server"
