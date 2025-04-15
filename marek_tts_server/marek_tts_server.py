@@ -87,8 +87,9 @@ if __name__ == "__main__":
     HOST, PORT = config["server"]["host"], config["server"]["port"]
     USE_CUDA = config["hardware"]["use_cuda"]
     USE_DEEPSPEED = config["hardware"]["use_deepspeed"]
+    PRELOAD_ON_STARTUP = config["loading"]["preload_on_startup"]
 
-    speech = XTTS2Speech(USE_CUDA, USE_DEEPSPEED)
+    speech = XTTS2Speech(USE_CUDA, USE_DEEPSPEED, PRELOAD_ON_STARTUP)
 
     print("Starting TTS server at {}:{}".format(HOST, PORT))
 

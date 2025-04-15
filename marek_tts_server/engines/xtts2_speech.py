@@ -5,24 +5,27 @@ import gc
 import os
 
 class XTTS2Speech:
-    def __init__(self, use_cuda, use_deepspeed) -> None:
+    def __init__(self, use_cuda, use_deepspeed, preload_on_startup) -> None:
         self.lock = threading.Lock()
         self.speaker_data = {}
         self.ref_count = 0
         self.use_cuda = use_cuda
         self.use_deepspeed = use_deepspeed
+        self.preload_on_startup = preload_on_startup
+        if self.preload_on_startup:
+            self.start()
 
     def add_reference(self):
         with self.lock:
             self.ref_count += 1
-            if self.ref_count == 1:
+            if self.ref_count == 1 and not self.preload_on_startup:
                 self.start()
 
     def release_reference(self):
         """Free resources if reference count drops to 0"""
         with self.lock:
             self.ref_count -= 1
-            if self.ref_count == 0:
+            if self.ref_count == 0 and not self.preload_on_startup:
                 self.stop()
 
     def start(self):

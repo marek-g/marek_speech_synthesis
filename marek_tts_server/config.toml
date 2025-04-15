@@ -5,3 +5,6 @@ port = 9999
 [hardware]
 use_cuda = true
 use_deepspeed = false
+
+[loading]
+preload_on_startup = true
