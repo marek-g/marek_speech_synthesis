@@ -22,6 +22,12 @@ pub struct Voice {
     pub sample_rate: u32,
 }
 
+#[derive(Debug)]
+pub struct AudioChunk {
+    pub sample_rate: u32,
+    pub samples: Vec<i16>,
+}
+
 #[derive(Debug, Deserialize)]
 struct ErrorResponse {
     error_code: i32,
@@ -75,7 +81,7 @@ impl TtsClient {
         voice: &str,
         engine: &str,
         language: &str,
-    ) -> impl Stream<Item = Result<Vec<i16>, Box<dyn Error + 'static>>> + '_ {
+    ) -> impl Stream<Item = Result<AudioChunk, Box<dyn Error + 'static>>> + '_ {
         let request = TtsStreamRequest {
             method: "tts_stream",
             text,
@@ -107,7 +113,7 @@ impl TtsClient {
             let mut buffer_i16 = vec![0; buffer_u8.len() / 2];
             LittleEndian::read_i16_into(&buffer_u8, &mut buffer_i16);
 
-            yield buffer_i16;
+        yield AudioChunk { sample_rate: response.sample_rate, samples: buffer_i16 };
 
             self.writer
                 .write_all(b"y\n").await?;

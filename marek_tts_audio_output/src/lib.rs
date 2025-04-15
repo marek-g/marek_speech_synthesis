@@ -20,7 +20,6 @@ pub trait TtsAudioOutput {
         voice: &str,
         engine: &str,
         language: &str,
-        sample_rate: u32,
     ) -> impl Future<Output = Result<(), Box<dyn Error>>>;
 }
 
@@ -31,8 +30,12 @@ impl TtsAudioOutput for TtsClient {
         voice: &str,
         engine: &str,
         language: &str,
-        sample_rate: u32,
     ) -> Result<(), Box<dyn Error>> {
+        // start generating speech data
+        let audio = self.tts_stream(text, voice, engine, language);
+        pin_mut!(audio);
+
+        // start initializing audio output
         let host = cpal::default_host();
         let device = host
             .default_output_device()
@@ -42,6 +45,15 @@ impl TtsAudioOutput for TtsClient {
             .supported_output_configs()
             .expect("error while querying configs");
 
+        // retrieve first audio chunk to read sample rate
+        let chunk = audio.try_next().await?;
+        if chunk.is_none() {
+            return Ok(());
+        }
+        let mut chunk = chunk.unwrap();
+        let sample_rate = chunk.sample_rate;
+
+        // continue initializing audio output
         let config = supported_configs_range
             .into_iter()
             .find(|config| config.channels() == 1 && config.sample_format() == SampleFormat::I16)
@@ -58,7 +70,7 @@ impl TtsAudioOutput for TtsClient {
         let error_callback =
             |err: StreamError| eprintln!("an error occurred on the output audio stream: {}", err);
         let mut data_callback = Some(move |data: &mut [i16], info: &cpal::OutputCallbackInfo| {
-            println!("New audio buffer: {} {:?}", data.len(), info);
+            //println!("New audio buffer: {} {:?}", data.len(), info);
             std::io::stdout().flush().unwrap();
             for (idx, sample) in data.iter_mut().enumerate() {
                 if let Ok(s) = sample_rx.try_recv() {
@@ -81,7 +93,7 @@ impl TtsAudioOutput for TtsClient {
 
                             let presentation_duration = presentation_duration
                                 + Duration::from_secs_f64((idx as f64) / (sample_rate as f64));
-                            println!("Presentation duration: {:?}", presentation_duration);
+                            //println!("Presentation duration: {:?}", presentation_duration);
                             finished_tx.send(presentation_duration).unwrap();
                         }
                     }
@@ -90,20 +102,17 @@ impl TtsAudioOutput for TtsClient {
         });
         let mut stream: Option<Stream> = None;
 
-        let audio = self.tts_stream(text, voice, engine, language);
-
-        pin_mut!(audio);
-        while let Some(chunk) = audio.try_next().await? {
-            println!("Has data!");
+        loop {
+            //println!("Has data!");
             std::io::stdout().flush().unwrap();
-            for sample in chunk.iter() {
+            for sample in chunk.samples.iter() {
                 //println!("Send data!");
                 std::io::stdout().flush().unwrap();
                 sample_tx.send(*sample)?;
             }
 
             if let Some(data_callback) = data_callback.take() {
-                println!("Open stream!");
+                //println!("Open stream!");
                 stream = Some(device.build_output_stream(
                     &config,
                     data_callback,
@@ -112,9 +121,15 @@ impl TtsAudioOutput for TtsClient {
                 )?);
                 stream.as_ref().unwrap().play()?;
             }
+
+            if let Some(next_chunk) = audio.try_next().await? {
+                chunk = next_chunk;
+            } else {
+                break;
+            }
         }
 
-        println!("Has no more data!");
+        //println!("Has no more data!");
         no_more_data.store(true, Ordering::Relaxed);
 
         // wait for the signal from data_callback
@@ -122,7 +137,7 @@ impl TtsAudioOutput for TtsClient {
         sleep(playback_duration).await;
 
         drop(stream);
-        println!("Dropped stream!");
+        //println!("Dropped stream!");
 
         Ok(())
     }

@@ -4,12 +4,11 @@ use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    println!("Connecting to the server...");
+    //println!("Connecting to the server...");
 
     let mut tts_client = TtsClient::connect("127.0.0.1:9999").await?;
 
-    println!("Enumerating voices...");
-
+    //println!("Enumerating voices...");
     //let voices = tts_client.enumerate_voices().await?;
     //println!("{:?}", voices);
 
@@ -25,7 +24,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             voice_name,
             "XTTS2",
             "pl",
-            24000,
         )
         .await
         .unwrap();
