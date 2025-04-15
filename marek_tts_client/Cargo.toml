@@ -6,7 +6,7 @@ description = "Rust client for Marek TTS Server"
 keywords = ["speech", "synthesis", "tts"]
 categories = ["accessibility", "multimedia::audio", "api-bindings"]
 repository = "https://github.com/marek-g/marek_speech_synthesis"
-documentation = "https://docs.rs/marek_tts_client-rs"
+documentation = "https://docs.rs/marek_tts_client"
 edition = "2021"
 license = "MIT"
 

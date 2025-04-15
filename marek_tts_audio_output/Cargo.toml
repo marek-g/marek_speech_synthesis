@@ -1,0 +1,17 @@
+[package]
+name = "marek_tts_audio_output"
+version = "0.1.0"
+authors = ["Marek Gibek <marek-dev@yandex.com>"]
+description = "Extension for Rust Marek TTS Client to play the speech with audio card"
+keywords = ["speech", "synthesis", "tts"]
+categories = ["accessibility", "multimedia::audio", "api-bindings"]
+documentation = "https://docs.rs/marek_tts_audio_output"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+marek_tts_client = { version = "0.1", path = "../marek_tts_client" }
+cpal = "0.15"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+futures-util = "0.3"
