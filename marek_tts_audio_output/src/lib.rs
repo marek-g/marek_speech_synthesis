@@ -70,8 +70,7 @@ impl TtsAudioOutput for TtsClient {
         let error_callback =
             |err: StreamError| eprintln!("an error occurred on the output audio stream: {}", err);
         let mut data_callback = Some(move |data: &mut [i16], info: &cpal::OutputCallbackInfo| {
-            //println!("New audio buffer: {} {:?}", data.len(), info);
-            std::io::stdout().flush().unwrap();
+            // cpal asks for new audio buffer to be filled
             for (idx, sample) in data.iter_mut().enumerate() {
                 if let Ok(s) = sample_rx.try_recv() {
                     *sample = s;
@@ -93,7 +92,7 @@ impl TtsAudioOutput for TtsClient {
 
                             let presentation_duration = presentation_duration
                                 + Duration::from_secs_f64((idx as f64) / (sample_rate as f64));
-                            //println!("Presentation duration: {:?}", presentation_duration);
+
                             finished_tx.send(presentation_duration).unwrap();
                         }
                     }
@@ -103,16 +102,13 @@ impl TtsAudioOutput for TtsClient {
         let mut stream: Option<Stream> = None;
 
         loop {
-            //println!("Has data!");
-            std::io::stdout().flush().unwrap();
+            // copy next chunk of audio data to the queue
             for sample in chunk.samples.iter() {
-                //println!("Send data!");
-                std::io::stdout().flush().unwrap();
                 sample_tx.send(*sample)?;
             }
 
             if let Some(data_callback) = data_callback.take() {
-                //println!("Open stream!");
+                // open audio output stream
                 stream = Some(device.build_output_stream(
                     &config,
                     data_callback,
@@ -129,15 +125,12 @@ impl TtsAudioOutput for TtsClient {
             }
         }
 
-        //println!("Has no more data!");
+        // no more data
         no_more_data.store(true, Ordering::Relaxed);
 
         // wait for the signal from data_callback
         let playback_duration = finished_rx.await.unwrap();
         sleep(playback_duration).await;
-
-        drop(stream);
-        //println!("Dropped stream!");
 
         Ok(())
     }
