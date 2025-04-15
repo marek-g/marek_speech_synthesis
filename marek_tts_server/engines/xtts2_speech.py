@@ -12,8 +12,6 @@ class XTTS2Speech:
         self.use_cuda = use_cuda
         self.use_deepspeed = use_deepspeed
         self.preload_on_startup = preload_on_startup
-        if self.preload_on_startup:
-            self.start()
 
     def add_reference(self):
         with self.lock:
